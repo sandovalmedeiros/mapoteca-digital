@@ -1,0 +1,497 @@
+{
+  "$schema": "https://developers.arcgis.com/experience-builder/api-reference/jimu-core/experience-schema.json",
+  "version": "1.0.0",
+  "name": "Mapoteca Digital - Sistema de Cadastro",
+  "description": "Sistema de automação para publicação de mapas do SEIGEO/SEI-BA",
+  "author": "SEIGEO - SEI-BA",
+  "created": "2025-11-19",
+
+  "config": {
+    "theme": {
+      "colors": {
+        "primary": "#003366",
+        "secondary": "#0066CC",
+        "success": "#28a745",
+        "danger": "#dc3545",
+        "warning": "#ffc107",
+        "info": "#17a2b8",
+        "light": "#f8f9fa",
+        "dark": "#343a40"
+      },
+      "fonts": {
+        "primary": "Roboto, sans-serif",
+        "secondary": "Open Sans, sans-serif"
+      }
+    },
+
+    "dataSources": {
+      "FS_Mapoteca_Publicacoes": {
+        "type": "FeatureService",
+        "url": "${ARCGIS_SERVER_URL}/rest/services/Mapoteca/FS_Mapoteca_Publicacoes/FeatureServer",
+        "layers": [
+          {
+            "id": 0,
+            "name": "t_publicacao",
+            "fields": [
+              "id_publicacao",
+              "id_classe_mapa",
+              "id_tipo_mapa",
+              "id_ano",
+              "id_regiao",
+              "id_tipo_regionalizacao",
+              "id_tema",
+              "id_tipo_tema",
+              "codigo_escala",
+              "codigo_cor",
+              "data_criacao",
+              "data_atualizacao",
+              "usuario_criacao"
+            ]
+          }
+        ],
+        "capabilities": "Query,Create,Update,Delete,Editing,Attachments"
+      },
+
+      "FS_Mapoteca_Dominios": {
+        "type": "FeatureService",
+        "url": "${ARCGIS_SERVER_URL}/rest/services/Mapoteca/FS_Mapoteca_Dominios/FeatureServer",
+        "layers": [
+          {"id": 0, "name": "t_classe_mapa"},
+          {"id": 1, "name": "t_tipo_mapa"},
+          {"id": 2, "name": "t_anos"},
+          {"id": 3, "name": "t_escala"},
+          {"id": 4, "name": "t_cor"},
+          {"id": 5, "name": "t_tipo_tema"},
+          {"id": 6, "name": "t_tipo_regionalizacao"},
+          {"id": 7, "name": "t_regiao"},
+          {"id": 8, "name": "t_tema"}
+        ],
+        "capabilities": "Query"
+      },
+
+      "FS_Mapoteca_Relacionamentos": {
+        "type": "FeatureService",
+        "url": "${ARCGIS_SERVER_URL}/rest/services/Mapoteca/FS_Mapoteca_Relacionamentos/FeatureServer",
+        "layers": [
+          {"id": 0, "name": "t_classe_mapa_tipo_mapa"},
+          {"id": 1, "name": "t_regionalizacao_regiao"},
+          {"id": 2, "name": "t_tipo_tema_tema"}
+        ],
+        "capabilities": "Query"
+      }
+    },
+
+    "widgets": {
+      "header": {
+        "type": "Header",
+        "id": "header_widget",
+        "position": {"x": 0, "y": 0, "width": "100%", "height": 80},
+        "config": {
+          "title": "Mapoteca Digital - Sistema de Cadastro",
+          "logo": {
+            "url": "/assets/logo-sei-ba.png",
+            "alt": "SEI-BA Logo"
+          },
+          "showUser": true,
+          "showSignOut": true,
+          "navigation": {
+            "items": [
+              {
+                "label": "Mapas Estaduais",
+                "url": "/apps/mapas-estaduais",
+                "target": "_blank"
+              },
+              {
+                "label": "Mapas Regionais",
+                "url": "/apps/mapas-regionais",
+                "target": "_blank"
+              },
+              {
+                "label": "Mapas Municipais",
+                "url": "/apps/mapas-municipais",
+                "target": "_blank"
+              },
+              {
+                "label": "Cartogramas",
+                "url": "/apps/cartogramas",
+                "target": "_blank"
+              }
+            ]
+          }
+        }
+      },
+
+      "list": {
+        "type": "List",
+        "id": "list_widget",
+        "position": {"x": 0, "y": 80, "width": "30%", "height": "calc(100vh - 80px)"},
+        "config": {
+          "dataSource": "FS_Mapoteca_Publicacoes/0",
+          "title": "Publicações Recentes",
+          "itemsPerPage": 10,
+          "showPagination": true,
+          "enableSearch": true,
+          "searchFields": ["nome_tema", "ano", "nome_regiao"],
+          "sortField": "id_publicacao",
+          "sortOrder": "DESC",
+          "template": {
+            "type": "card",
+            "title": "{nome_classe_mapa} - {nome_tipo_mapa}",
+            "subtitle": "{nome_tema}",
+            "description": "{ano} | {nome_regiao}",
+            "thumbnail": {
+              "default": "/assets/default-map-icon.png"
+            }
+          },
+          "actions": [
+            {
+              "type": "button",
+              "label": "Editar",
+              "icon": "edit",
+              "action": "openForm",
+              "style": "primary"
+            },
+            {
+              "type": "button",
+              "label": "Ver PDFs",
+              "icon": "file-pdf",
+              "action": "viewAttachments",
+              "style": "secondary"
+            },
+            {
+              "type": "button",
+              "label": "Excluir",
+              "icon": "trash",
+              "action": "delete",
+              "style": "danger",
+              "confirm": {
+                "enabled": true,
+                "message": "Tem certeza que deseja excluir esta publicação? Esta ação não pode ser desfeita."
+              }
+            }
+          ],
+          "filters": [
+            {
+              "field": "id_classe_mapa",
+              "label": "Classe do Mapa",
+              "type": "dropdown",
+              "dataSource": "FS_Mapoteca_Dominios/0"
+            },
+            {
+              "field": "id_tipo_mapa",
+              "label": "Tipo do Mapa",
+              "type": "dropdown",
+              "dataSource": "FS_Mapoteca_Dominios/1"
+            },
+            {
+              "field": "id_ano",
+              "label": "Ano",
+              "type": "dropdown",
+              "dataSource": "FS_Mapoteca_Dominios/2"
+            }
+          ]
+        }
+      },
+
+      "form": {
+        "type": "Form",
+        "id": "form_widget",
+        "position": {"x": "30%", "y": 80, "width": "70%", "height": "calc(100vh - 150px)"},
+        "config": {
+          "dataSource": "FS_Mapoteca_Publicacoes/0",
+          "title": "Cadastro de Nova Publicação",
+          "submitButton": {
+            "label": "Salvar Publicação",
+            "icon": "save"
+          },
+          "sections": [
+            {
+              "title": "1. Classificação",
+              "collapsible": false,
+              "fields": [
+                {
+                  "fieldName": "id_classe_mapa",
+                  "label": "Classe do Mapa",
+                  "type": "dropdown",
+                  "required": true,
+                  "dataSource": "FS_Mapoteca_Dominios/0",
+                  "displayField": "nome_classe_mapa",
+                  "valueField": "id_classe_mapa",
+                  "placeholder": "Selecione a classe...",
+                  "helpText": "Escolha entre Mapa ou Cartograma",
+                  "validation": {
+                    "custom": "validateClasseTipo"
+                  }
+                },
+                {
+                  "fieldName": "id_tipo_mapa",
+                  "label": "Tipo do Mapa",
+                  "type": "dropdown",
+                  "required": true,
+                  "dataSource": "FS_Mapoteca_Dominios/1",
+                  "displayField": "nome_tipo_mapa",
+                  "valueField": "id_tipo_mapa",
+                  "placeholder": "Selecione o tipo...",
+                  "helpText": "Escolha entre Estadual, Regional ou Municipal",
+                  "dependsOn": "id_classe_mapa",
+                  "validation": {
+                    "custom": "validateClasseTipo"
+                  }
+                }
+              ]
+            },
+            {
+              "title": "2. Metadados Temporais",
+              "collapsible": false,
+              "fields": [
+                {
+                  "fieldName": "id_ano",
+                  "label": "Ano de Referência",
+                  "type": "dropdown",
+                  "required": true,
+                  "dataSource": "FS_Mapoteca_Dominios/2",
+                  "displayField": "ano",
+                  "valueField": "id_ano",
+                  "orderBy": "ano DESC",
+                  "placeholder": "Selecione o ano...",
+                  "helpText": "Ano de referência dos dados do mapa"
+                }
+              ]
+            },
+            {
+              "title": "3. Localização",
+              "collapsible": false,
+              "fields": [
+                {
+                  "fieldName": "id_tipo_regionalizacao",
+                  "label": "Tipo de Regionalização",
+                  "type": "dropdown",
+                  "required": true,
+                  "dataSource": "FS_Mapoteca_Dominios/6",
+                  "displayField": "nome_tipo_regionalizacao",
+                  "valueField": "id_tipo_regionalizacao",
+                  "placeholder": "Selecione o tipo de regionalização...",
+                  "helpText": "Ex: Mesorregiões, Territórios de Identidade, etc.",
+                  "onChange": "loadRegioesValidas"
+                },
+                {
+                  "fieldName": "id_regiao",
+                  "label": "Região",
+                  "type": "dropdown",
+                  "required": true,
+                  "dataSource": "FS_Mapoteca_Relacionamentos/1",
+                  "displayField": "nome_regiao",
+                  "valueField": "id_regiao",
+                  "placeholder": "Selecione primeiro o tipo de regionalização...",
+                  "helpText": "Região será filtrada baseada no tipo selecionado",
+                  "dependsOn": "id_tipo_regionalizacao",
+                  "filter": "id_tipo_regionalizacao = ${id_tipo_regionalizacao}",
+                  "disabled": true
+                }
+              ]
+            },
+            {
+              "title": "4. Tema",
+              "collapsible": false,
+              "fields": [
+                {
+                  "fieldName": "id_tipo_tema",
+                  "label": "Tipo de Tema",
+                  "type": "dropdown",
+                  "required": true,
+                  "dataSource": "FS_Mapoteca_Dominios/5",
+                  "displayField": "nome_tipo_tema",
+                  "valueField": "id_tipo_tema",
+                  "placeholder": "Selecione o tipo de tema...",
+                  "helpText": "Ex: Físico-Ambiental, Socioeconômico, etc.",
+                  "onChange": "loadTemasValidos"
+                },
+                {
+                  "fieldName": "id_tema",
+                  "label": "Tema",
+                  "type": "dropdown",
+                  "required": true,
+                  "dataSource": "FS_Mapoteca_Relacionamentos/2",
+                  "displayField": "nome_tema",
+                  "valueField": "id_tema",
+                  "placeholder": "Selecione primeiro o tipo de tema...",
+                  "helpText": "Tema será filtrado baseado no tipo selecionado",
+                  "dependsOn": "id_tipo_tema",
+                  "filter": "id_tipo_tema = ${id_tipo_tema}",
+                  "disabled": true
+                }
+              ]
+            },
+            {
+              "title": "5. Características Cartográficas",
+              "collapsible": false,
+              "fields": [
+                {
+                  "fieldName": "codigo_escala",
+                  "label": "Escala Cartográfica",
+                  "type": "dropdown",
+                  "required": true,
+                  "dataSource": "FS_Mapoteca_Dominios/3",
+                  "displayField": "nome_escala",
+                  "valueField": "codigo_escala",
+                  "placeholder": "Selecione a escala...",
+                  "helpText": "Ex: 1:2.000.000, 1:500.000, etc."
+                },
+                {
+                  "fieldName": "codigo_cor",
+                  "label": "Tipo de Colorização",
+                  "type": "dropdown",
+                  "required": true,
+                  "dataSource": "FS_Mapoteca_Dominios/4",
+                  "displayField": "nome_cor",
+                  "valueField": "codigo_cor",
+                  "placeholder": "Colorido ou Preto e Branco...",
+                  "helpText": "Esquema de cores do mapa"
+                }
+              ]
+            }
+          ],
+          "validation": {
+            "validateOnChange": true,
+            "validateOnBlur": true,
+            "debounceTime": 500
+          },
+          "performance": {
+            "lazyLoadDropdowns": true,
+            "cacheResults": true,
+            "cacheDuration": 3600
+          }
+        }
+      },
+
+      "attachment": {
+        "type": "Attachment",
+        "id": "attachment_widget",
+        "position": {"x": "30%", "y": "calc(100vh - 70px)", "width": "70%", "height": 300},
+        "config": {
+          "dataSource": "FS_Mapoteca_Publicacoes/0",
+          "title": "Upload de PDFs",
+          "allowAdd": true,
+          "allowDelete": true,
+          "allowEdit": false,
+          "displayType": "list",
+          "supportedFileTypes": ["application/pdf"],
+          "maxFileSize": 52428800,
+          "maxFiles": 10,
+          "dragAndDrop": true,
+          "showPreview": true,
+          "inlineViewer": true,
+          "messages": {
+            "dragDropText": "Arraste o PDF aqui ou clique para selecionar",
+            "selectFileText": "Selecionar Arquivo",
+            "maxSizeError": "Arquivo muito grande. Máximo: 50MB",
+            "invalidTypeError": "Apenas arquivos PDF são permitidos",
+            "uploadSuccessText": "Upload realizado com sucesso!",
+            "uploadErrorText": "Erro ao fazer upload. Tente novamente."
+          },
+          "validation": {
+            "custom": "validatePDF"
+          }
+        }
+      },
+
+      "buttons": {
+        "type": "ButtonGroup",
+        "id": "button_group_widget",
+        "position": {"x": "30%", "y": "calc(100vh - 70px)", "width": "70%", "height": 70},
+        "config": {
+          "layout": "horizontal",
+          "align": "right",
+          "buttons": [
+            {
+              "id": "btnSave",
+              "label": "Salvar Publicação",
+              "type": "primary",
+              "icon": "save",
+              "action": "submitForm",
+              "disabled": "!form.isValid()",
+              "onClick": "handleSaveForm"
+            },
+            {
+              "id": "btnClear",
+              "label": "Limpar",
+              "type": "secondary",
+              "icon": "refresh",
+              "action": "clearForm",
+              "onClick": "handleClearForm"
+            },
+            {
+              "id": "btnCancel",
+              "label": "Cancelar",
+              "type": "tertiary",
+              "icon": "close",
+              "action": "closeForm",
+              "onClick": "handleCancelForm"
+            }
+          ]
+        }
+      }
+    },
+
+    "responsive": {
+      "breakpoints": {
+        "desktop": {
+          "minWidth": 1024,
+          "layout": "two-column",
+          "listWidth": "30%",
+          "formWidth": "70%"
+        },
+        "tablet": {
+          "minWidth": 768,
+          "maxWidth": 1023,
+          "layout": "two-column",
+          "listWidth": "35%",
+          "formWidth": "65%"
+        },
+        "mobile": {
+          "maxWidth": 767,
+          "layout": "single-column",
+          "showListAsDrawer": true
+        }
+      }
+    },
+
+    "accessibility": {
+      "wcagLevel": "AA",
+      "keyboardNavigation": true,
+      "ariaLabels": true,
+      "focusIndicators": true,
+      "screenReaderAnnouncements": true,
+      "contrastRatio": "4.5:1"
+    },
+
+    "security": {
+      "authentication": {
+        "type": "ArcGISPortal",
+        "required": true
+      },
+      "authorization": {
+        "roles": ["Editor", "Admin"],
+        "permissions": {
+          "create": ["Editor", "Admin"],
+          "update": ["Editor", "Admin"],
+          "delete": ["Admin"]
+        }
+      }
+    },
+
+    "performance": {
+      "sla": {
+        "loadTime": 3000,
+        "saveTime": 1000,
+        "uploadTime": 30000,
+        "listLoadTime": 2000
+      },
+      "optimization": {
+        "lazyLoading": true,
+        "caching": true,
+        "compression": true
+      }
+    }
+  }
+}
